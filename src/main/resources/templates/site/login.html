@@ -98,8 +98,8 @@
                         </div>
                     </div>
                     <div class="col-sm-4">
-                        <img th:src="@{/img/captcha.png}" style="width:100px;height:40px;" class="mr-2"/>
-                        <a href="javascript:;" class="font-size-12 align-bottom">刷新验证码</a>
+                        <img th:src="@{/kaptcha}" id="kaptcha" style="width:100px;height:40px;" class="mr-2"/>
+                        <a href="javascript:refresh_kaptcha()" class="font-size-12 align-bottom">刷新验证码</a>
                     </div>
                 </div>
                 <div class="form-group row mt-4">
@@ -189,5 +189,14 @@
         crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <script th:src="@{/js/global.js}"></script>
+<script>
+    function refresh_kaptcha() {
+        // 欺骗浏览器 让它误以为路径变了
+        // 否则始终访问相同路径 浏览器可能会认为这是一个静态资源 就不去访问了 而是直接从缓存拿
+        // 多一个参数 后端并不处理 不影响代码功能
+        var path = CONTEXT_PATH + "/kaptcha?p=" + Math.random();
+        $("#kaptcha").attr("src", path);
+    }
+</script>
 </body>
 </html>
