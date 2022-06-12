@@ -18,4 +18,8 @@ public interface UserService extends IService<User> {
 
     LoginTicket findLoginTicket(String ticket);
 
+    void updateHeader(int userId, String headerUrl);
+
+    Map<String, Object> resetPassword(String email, String password);
+
 }

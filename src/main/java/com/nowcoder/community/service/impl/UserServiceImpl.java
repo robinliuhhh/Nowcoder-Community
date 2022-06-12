@@ -176,4 +176,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginTicketMapper.selectOne(queryWrapper);
     }
 
+    public void updateHeader(int userId, String headerUrl) {
+        User user = userMapper.selectById(userId);
+        user.setHeaderUrl(headerUrl);
+        userMapper.updateById(user);
+    }
+
+    // 重置密码
+    public Map<String, Object> resetPassword(String email, String password) {
+        Map<String, Object> msgMap = new HashMap<>();
+
+        // 空值处理
+        if (StringUtils.isBlank(email)) {
+            msgMap.put("emailMsg", "邮箱不能为空!");
+            return msgMap;
+        }
+        if (StringUtils.isBlank(password)) {
+            msgMap.put("passwordMsg", "密码不能为空!");
+            return msgMap;
+        }
+
+        // 验证邮箱
+        QueryWrapper<User> emailQW = new QueryWrapper<>();
+        emailQW.eq("email", email);
+        User user = userMapper.selectOne(emailQW);
+        if (user == null) {
+            msgMap.put("emailMsg", "该邮箱尚未注册!");
+            return msgMap;
+        }
+
+        // 重置密码
+        password = CommunityUtil.md5(password + user.getSalt());
+        user.setPassword(password);
+        userMapper.updateById(user);
+
+        msgMap.put("user", user);
+        return msgMap;
+    }
+
 }
