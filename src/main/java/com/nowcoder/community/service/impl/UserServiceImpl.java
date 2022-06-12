@@ -2,7 +2,9 @@ package com.nowcoder.community.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nowcoder.community.dao.LoginTicketMapper;
 import com.nowcoder.community.dao.UserMapper;
+import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
@@ -24,6 +26,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserMapper userMapper;
 
     @Autowired
+    private LoginTicketMapper loginTicketMapper;
+
+    @Autowired
     private MailClient mailClient;
 
     @Autowired
@@ -37,7 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     public Map<String, Object> register(User user) {
 
-        Map<String, Object> errMap = new HashMap<>();
+        Map<String, Object> msgMap = new HashMap<>();
 
         // 空值处理
         if (user == null) {
@@ -45,16 +50,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (StringUtils.isBlank(user.getUsername())) {
             // 业务漏洞 不是程序错误 不抛异常
-            errMap.put("usernameMsg", "账号不能为空!");
-            return errMap;
+            msgMap.put("usernameMsg", "账号不能为空!");
+            return msgMap;
         }
         if (StringUtils.isBlank(user.getPassword())) {
-            errMap.put("passwordMsg", "密码不能为空!");
-            return errMap;
+            msgMap.put("passwordMsg", "密码不能为空!");
+            return msgMap;
         }
         if (StringUtils.isBlank(user.getEmail())) {
-            errMap.put("emailMsg", "邮箱不能为空!");
-            return errMap;
+            msgMap.put("emailMsg", "邮箱不能为空!");
+            return msgMap;
         }
 
         // 验证账号
@@ -62,8 +67,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         usernameQW.eq("username", user.getUsername());
         User u = userMapper.selectOne(usernameQW);
         if (u != null) {
-            errMap.put("usernameMsg", "该账号已存在!");
-            return errMap;
+            msgMap.put("usernameMsg", "该账号已存在!");
+            return msgMap;
         }
 
         // 验证邮箱
@@ -71,8 +76,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         emailQW.eq("email", user.getEmail());
         u = userMapper.selectOne(emailQW);
         if (u != null) {
-            errMap.put("emailMsg", "该邮箱已被注册!");
-            return errMap;
+            msgMap.put("emailMsg", "该邮箱已被注册!");
+            return msgMap;
         }
 
         // 注册用户
@@ -94,7 +99,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String content = templateEngine.process("/mail/activation", context);
         mailClient.sendMail(user.getEmail(), "激活账号", content);
 
-        return errMap;
+        return msgMap;
     }
 
     public int activation(int userId, String code) {
@@ -108,6 +113,63 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             return ACTIVATION_FAILURE;
         }
+    }
+
+    public Map<String, Object> login(String username, String password, int expiredSeconds) {
+
+        Map<String, Object> msgMap = new HashMap<>();
+
+        // 空值处理
+        if (StringUtils.isBlank(username)) {
+            msgMap.put("usernameMsg", "账号不能为空!");
+            return msgMap;
+        }
+        if (StringUtils.isBlank(password)) {
+            msgMap.put("passwordMsg", "密码不能为空!");
+            return msgMap;
+        }
+
+        // 验证账号
+        QueryWrapper<User> usernameQW = new QueryWrapper<>();
+        usernameQW.eq("username", username);
+        User user = userMapper.selectOne(usernameQW);
+        if (user == null) {
+            msgMap.put("usernameMsg", "该账号不存在!");
+            return msgMap;
+        }
+
+        // 验证状态
+        if (user.getStatus() == 0) {
+            msgMap.put("usernameMsg", "该账号未激活!");
+            return msgMap;
+        }
+
+        // 验证密码
+        password = CommunityUtil.md5(password + user.getSalt());
+        if (!user.getPassword().equals(password)) {
+            msgMap.put("passwordMsg", "密码不正确!");
+            return msgMap;
+        }
+
+        // 生成登录凭证
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(CommunityUtil.generateUUID());
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+        loginTicketMapper.insert(loginTicket);
+
+        // ticket存入Session
+        msgMap.put("ticket", loginTicket.getTicket());
+        return msgMap;
+    }
+
+    public void logout(String ticket) {
+        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("ticket", ticket);
+        LoginTicket loginTicket = loginTicketMapper.selectOne(queryWrapper);
+        loginTicket.setStatus(1);
+        loginTicketMapper.update(loginTicket, queryWrapper);
     }
 
 }
