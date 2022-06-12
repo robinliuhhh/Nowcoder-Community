@@ -41,7 +41,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private String contextPath;
 
     public Map<String, Object> register(User user) {
-
         Map<String, Object> msgMap = new HashMap<>();
 
         // 空值处理
@@ -116,7 +115,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     public Map<String, Object> login(String username, String password, int expiredSeconds) {
-
         Map<String, Object> msgMap = new HashMap<>();
 
         // 空值处理
@@ -170,6 +168,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LoginTicket loginTicket = loginTicketMapper.selectOne(queryWrapper);
         loginTicket.setStatus(1);
         loginTicketMapper.update(loginTicket, queryWrapper);
+    }
+
+    public LoginTicket findLoginTicket(String ticket) {
+        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("ticket", ticket);
+        return loginTicketMapper.selectOne(queryWrapper);
     }
 
 }
