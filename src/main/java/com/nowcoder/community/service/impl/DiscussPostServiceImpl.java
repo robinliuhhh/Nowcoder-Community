@@ -24,20 +24,19 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
     @Override
     public IPage<DiscussPost> findDiscussPosts(int userId, int current, int size) {
         QueryWrapper<DiscussPost> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(userId != 0, "userId", userId);
-        queryWrapper.orderByDesc("type");
-        queryWrapper.orderByDesc("create_time");
+        queryWrapper.ne("status", 2).eq(userId != 0, "user_id", userId)
+                .orderByDesc("type", "create_time");
         return discussPostMapper.selectPage(new Page<>(current, size), queryWrapper);
     }
 
     @Override
     public int findDiscussPostRows(int userId) {
         QueryWrapper<DiscussPost> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(userId != 0, "userId", userId);
+        queryWrapper.ne("status", 2).eq(userId != 0, "user_id", userId);
         return discussPostMapper.selectCount(queryWrapper).intValue();
     }
 
-    public int addDiscussPost(DiscussPost post) {
+    public void addDiscussPost(DiscussPost post) {
         if (post == null) {
             throw new IllegalArgumentException("参数不能为空!");
         }
@@ -49,7 +48,7 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
         post.setTitle(sensitiveFilter.filter(post.getTitle()));
         post.setContent(sensitiveFilter.filter(post.getContent()));
 
-        return discussPostMapper.insert(post);
+        discussPostMapper.insert(post);
     }
 
 }

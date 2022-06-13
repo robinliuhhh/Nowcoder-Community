@@ -10,6 +10,6 @@ public interface DiscussPostService extends IService<DiscussPost> {
 
     int findDiscussPostRows(int userId);
 
-    int addDiscussPost(DiscussPost post);
+    void addDiscussPost(DiscussPost post);
 
 }
