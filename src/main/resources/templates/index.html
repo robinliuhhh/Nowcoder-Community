@@ -30,7 +30,7 @@
                             <a class="nav-link" th:href="@{/index}">首页</a>
                         </li>
                         <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser!=null}">
-                            <a class="nav-link position-relative" href="site/letter.html">消息<span
+                            <a class="nav-link position-relative" th:href="@{/letter/list}">消息<span
                                     class="badge badge-danger">12</span></a>
                         </li>
                         <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser==null}">
@@ -145,7 +145,7 @@
                             <ul class="d-inline float-right">
                                 <li class="d-inline ml-2">赞 11</li>
                                 <li class="d-inline ml-2">|</li>
-                                <li class="d-inline ml-2">回帖 <span th:text="${map.post.commentCount}">7</li>
+                                <li class="d-inline ml-2">回帖 <span th:text="${map.post.commentCount}">7</span></li>
                             </ul>
                         </div>
                     </div>
