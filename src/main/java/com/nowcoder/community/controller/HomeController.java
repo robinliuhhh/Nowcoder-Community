@@ -46,4 +46,10 @@ public class HomeController {
         return "/index";
     }
 
+    // 服务器发生异常统一处理 处理后统一重定向到500页面 首先要把该页面配置一下
+    @GetMapping("/error")
+    public String getErrorPage() {
+        return "/error/500";
+    }
+
 }
