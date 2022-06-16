@@ -42,4 +42,14 @@ public interface CommunityConstant {
      */
     int ENTITY_TYPE_USER = 3;
 
+    /**
+     * 查询类型: 关注的人
+     */
+    int QUERY_TYPE_FOLLOWEE = 1;
+
+    /**
+     * 查询类型: 粉丝
+     */
+    int QUERY_TYPE_FOLLOWER = 2;
+
 }
