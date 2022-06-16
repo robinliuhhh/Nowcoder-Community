@@ -2,7 +2,6 @@ package com.nowcoder.community.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.nowcoder.community.dao.LoginTicketMapper;
 import com.nowcoder.community.dao.UserMapper;
 import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.User;
@@ -10,14 +9,20 @@ import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.MailClient;
+import com.nowcoder.community.util.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, CommunityConstant {
@@ -25,8 +30,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private UserMapper userMapper;
 
-    @Autowired
-    private LoginTicketMapper loginTicketMapper;
+//    @Autowired
+//    private LoginTicketMapper loginTicketMapper;
 
     @Autowired
     private MailClient mailClient;
@@ -39,6 +44,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Value("${server.servlet.context-path}")
     private String contextPath;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    public User getById(int id) {
+        User user = getCache(id);
+        if (user == null) {
+            user = initCache(id);
+        }
+        return user;
+    }
 
     public Map<String, Object> register(User user) {
         Map<String, Object> msgMap = new HashMap<>();
@@ -107,6 +123,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return ACTIVATION_REPEAT;
         } else if (user.getActivationCode().equals(code)) {
             user.setStatus(1);
+            // 有修改操作就清除缓存
+            clearCache(userId);
             userMapper.updateById(user);
             return ACTIVATION_SUCCESS;
         } else {
@@ -155,7 +173,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         loginTicket.setTicket(CommunityUtil.generateUUID());
         loginTicket.setStatus(0);
         loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
-        loginTicketMapper.insert(loginTicket);
+//        loginTicketMapper.insert(loginTicket);
+
+        // Redis会把对象（LoginTicket）转为一个字符串存起来
+        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
+        redisTemplate.opsForValue().set(redisKey, loginTicket);
 
         // ticket存入Session
         msgMap.put("ticket", loginTicket.getTicket());
@@ -163,23 +185,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     public void logout(String ticket) {
-        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("ticket", ticket);
-        LoginTicket loginTicket = loginTicketMapper.selectOne(queryWrapper);
+//        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("ticket", ticket);
+//        LoginTicket loginTicket = loginTicketMapper.selectOne(queryWrapper);
+//        loginTicket.setStatus(1);
+//        loginTicketMapper.update(loginTicket, queryWrapper);
+
+        String redisKey = RedisKeyUtil.getTicketKey(ticket);
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
         loginTicket.setStatus(1);
-        loginTicketMapper.update(loginTicket, queryWrapper);
+        redisTemplate.opsForValue().set(redisKey, loginTicket);
     }
 
     public LoginTicket findLoginTicket(String ticket) {
-        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("ticket", ticket);
-        return loginTicketMapper.selectOne(queryWrapper);
+//        QueryWrapper<LoginTicket> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("ticket", ticket);
+//        return loginTicketMapper.selectOne(queryWrapper);
+
+        String redisKey = RedisKeyUtil.getTicketKey(ticket);
+        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
     }
 
     public void updateHeader(int userId, String headerUrl) {
         User user = userMapper.selectById(userId);
         user.setHeaderUrl(headerUrl);
         userMapper.updateById(user);
+        // 更新成功之后再清除缓存
+        clearCache(userId);
     }
 
     // 重置密码
@@ -209,9 +241,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         password = CommunityUtil.md5(password + user.getSalt());
         user.setPassword(password);
         userMapper.updateById(user);
+        clearCache(user.getId());
 
         msgMap.put("user", user);
         return msgMap;
+    }
+
+    // 1.优先从缓存中取值
+    private User getCache(int userId) {
+        String redisKey = RedisKeyUtil.getUserKey(userId);
+        return (User) redisTemplate.opsForValue().get(redisKey);
+    }
+
+    // 2.取不到时初始化缓存数据
+    private User initCache(int userId) {
+        User user = userMapper.selectById(userId);
+        String redisKey = RedisKeyUtil.getUserKey(userId);
+        redisTemplate.opsForValue().set(redisKey, user, 3600, TimeUnit.SECONDS);
+        return user;
+    }
+
+    // 3.数据变更时清除缓存数据
+    private void clearCache(int userId) {
+        String redisKey = RedisKeyUtil.getUserKey(userId);
+        redisTemplate.delete(redisKey);
     }
 
 }

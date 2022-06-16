@@ -8,6 +8,8 @@ import java.util.Map;
 
 public interface UserService extends IService<User> {
 
+    User getById(int id);
+
     Map<String, Object> register(User user);
 
     int activation(int userId, String code);
