@@ -24,4 +24,12 @@ public interface MessageService extends IService<Message> {
 
     void deleteMessage(int id);
 
+    Message findLatestNotice(int userId, String topic);
+
+    int findNoticeCount(int userId, String topic);
+
+    int findNoticeUnreadCount(int userId, String topic);
+
+    IPage<Message> findNotices(int userId, String topic, int current, int size);
+
 }

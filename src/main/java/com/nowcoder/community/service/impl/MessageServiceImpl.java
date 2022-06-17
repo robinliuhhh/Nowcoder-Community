@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nowcoder.community.dao.MessageMapper;
 import com.nowcoder.community.entity.Message;
 import com.nowcoder.community.service.MessageService;
+import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.SensitiveFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements MessageService {
+public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements MessageService, CommunityConstant {
 
     @Autowired
     private MessageMapper messageMapper;
@@ -90,6 +91,55 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Message message = messageMapper.selectById(id);
         message.setStatus(2);
         messageMapper.updateById(message);
+    }
+
+    private List<Integer> findLatestNoticeIds(int userId, String topic) {
+        QueryWrapper<Message> subWrapper = new QueryWrapper<>();
+        subWrapper.select("max(id) as id").ne("status", 2).eq("from_id", SYSTEM_USER_ID)
+                .eq("to_id", userId).eq("conversation_id", topic);
+        List<Message> messageList = messageMapper.selectList(subWrapper);
+        // All elements are null BUT list.size() = 1
+        if (messageList.get(0) == null) {
+            return null;
+        }
+        return messageList.stream().map(Message::getId).collect(Collectors.toList());
+    }
+
+    // 查询某个主题下最新的通知
+    public Message findLatestNotice(int userId, String topic) {
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        List<Integer> latestNoticeIds = findLatestNoticeIds(userId, topic);
+        if (latestNoticeIds == null) {
+            return null;
+        }
+        queryWrapper.in("id", latestNoticeIds).orderByDesc("create_time");
+        return messageMapper.selectBatchIds(latestNoticeIds).get(0);
+    }
+
+    // 查询某个主题所包含的通知数量
+    public int findNoticeCount(int userId, String topic) {
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").ne("status", 2).eq("from_id", SYSTEM_USER_ID)
+                .eq("to_id", userId).eq("conversation_id", topic);
+        return messageMapper.selectCount(queryWrapper).intValue();
+    }
+
+    // 查询未读的通知的数量
+    // 不传topic 表示统计comment like follow三个事件未读消息的总数
+    public int findNoticeUnreadCount(int userId, String topic) {
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").eq("status", 0).eq("from_id", SYSTEM_USER_ID)
+                .eq("to_id", userId).eq(topic != null, "conversation_id", topic);
+        return messageMapper.selectCount(queryWrapper).intValue();
+    }
+
+    // 查询某个主题所包含的通知列表
+    public IPage<Message> findNotices(int userId, String topic, int current, int size) {
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("status", 2).eq("from_id", SYSTEM_USER_ID)
+                .eq("to_id", userId).eq(topic != null, "conversation_id", topic)
+                .orderByDesc("create_time");
+        return messageMapper.selectPage(new Page<>(current, size), queryWrapper);
     }
 
 }
