@@ -15,3 +15,13 @@ bin\windows\zookeeper-server-start.bat config\zookeeper.properties
 bin\windows\kafka-server-start.bat config\server.properties
 ```
 
+### Elasticsearch
+
+```bash
+# 进入Elasticsearch安装目录
+d:
+cd Software\Elasticsearch\elasticsearch-7.17.3\bin
+# 双击
+elasticsearch.bat
+```
+
