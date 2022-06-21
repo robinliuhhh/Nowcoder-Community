@@ -69,6 +69,13 @@ public class EventConsumer implements CommunityConstant {
         elasticsearchService.saveDiscussPost(post);
     }
 
+    // 消费删帖事件
+    @KafkaListener(topics = {TOPIC_DELETE})
+    public void handleDeleteMessage(ConsumerRecord record) throws IOException {
+        Event event = checkMessage(record);
+        elasticsearchService.deleteDiscussPost(event.getEntityId());
+    }
+
     private Event checkMessage(ConsumerRecord record) {
         if (record == null || record.value() == null) {
             logger.error("消息的内容为空!");

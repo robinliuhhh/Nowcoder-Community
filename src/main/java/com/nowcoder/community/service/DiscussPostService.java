@@ -12,4 +12,8 @@ public interface DiscussPostService extends IService<DiscussPost> {
 
     void addDiscussPost(DiscussPost post);
 
+    void updateType(int id, int type);
+
+    void updateStatus(int id, int status);
+
 }

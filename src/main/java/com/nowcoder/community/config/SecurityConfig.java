@@ -37,7 +37,7 @@ public class SecurityConfig implements CommunityConstant {
                 .hasAnyAuthority(AUTHORITY_USER, AUTHORITY_ADMIN, AUTHORITY_MODERATOR)
                 .antMatchers(
                         "/discuss/top",
-                        "/discuss/credit")
+                        "/discuss/wonderful")
                 .hasAnyAuthority(AUTHORITY_MODERATOR)
                 .antMatchers(
                         "/discuss/delete",

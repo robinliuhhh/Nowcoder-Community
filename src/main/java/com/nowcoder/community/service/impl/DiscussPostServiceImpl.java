@@ -51,4 +51,16 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
         discussPostMapper.insert(post);
     }
 
+    public void updateType(int id, int type) {
+        DiscussPost discussPost = discussPostMapper.selectById(id);
+        discussPost.setType(type);
+        discussPostMapper.updateById(discussPost);
+    }
+
+    public void updateStatus(int id, int status) {
+        DiscussPost discussPost = discussPostMapper.selectById(id);
+        discussPost.setStatus(status);
+        discussPostMapper.updateById(discussPost);
+    }
+
 }

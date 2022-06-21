@@ -149,4 +149,34 @@ public class DiscussPostController implements CommunityConstant {
         return "/site/discuss-detail";
     }
 
+    // 置顶
+    @PostMapping("/top")
+    @ResponseBody
+    public String setTop(int id) {
+        discussPostService.updateType(id, 1);
+        // 触发发帖事件
+        eventProducer.fireDiscussPostEvent(TOPIC_PUBLISH, hostHolder.getUser().getId(), id);
+        return CommunityUtil.getJSONString(0);
+    }
+
+    // 加精
+    @PostMapping("/wonderful")
+    @ResponseBody
+    public String setWonderful(int id) {
+        discussPostService.updateStatus(id, 1);
+        // 触发发帖事件
+        eventProducer.fireDiscussPostEvent(TOPIC_PUBLISH, hostHolder.getUser().getId(), id);
+        return CommunityUtil.getJSONString(0);
+    }
+
+    // 删除
+    @PostMapping("/delete")
+    @ResponseBody
+    public String setDelete(int id) {
+        discussPostService.updateStatus(id, 2);
+        // 触发删帖事件
+        eventProducer.fireDiscussPostEvent(TOPIC_DELETE, hostHolder.getUser().getId(), id);
+        return CommunityUtil.getJSONString(0);
+    }
+
 }
