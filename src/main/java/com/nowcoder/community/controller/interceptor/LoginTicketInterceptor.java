@@ -6,6 +6,10 @@ import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CookieUtil;
 import com.nowcoder.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -39,6 +43,11 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 // 在本次请求中持有用户
                 // 多线程环境 用ThreadLocal隔离不同对象（ThreadLocal以线程为key存取对象）
                 hostHolder.setUser(user);
+                // hostHolder存用户信息 SecurityContextHolder存认证结果
+                // 构建用户认证的结果并存入SecurityContext 以便于Security进行授权
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        user, user.getPassword(), userService.getAuthorities(user.getId()));
+                SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
             }
         }
 

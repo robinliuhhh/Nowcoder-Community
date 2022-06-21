@@ -102,7 +102,6 @@ public class ElasticsearchService {
             if (hit.highlight().get("content") != null) {
                 post.setContent(hit.highlight().get("content").get(0));
             }
-            System.out.println(post.toString());
             list.add(post);
         }
 
