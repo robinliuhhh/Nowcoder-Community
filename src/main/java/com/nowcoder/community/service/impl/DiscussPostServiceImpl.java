@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nowcoder.community.dao.DiscussPostMapper;
 import com.nowcoder.community.entity.DiscussPost;
 import com.nowcoder.community.service.DiscussPostService;
+import com.nowcoder.community.util.RedisKeyUtil;
 import com.nowcoder.community.util.SensitiveFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
@@ -21,11 +23,15 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
     @Autowired
     private SensitiveFilter sensitiveFilter;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @Override
-    public IPage<DiscussPost> findDiscussPosts(int userId, int current, int size) {
+    public IPage<DiscussPost> findDiscussPosts(int userId, int current, int size, int orderMode) {
         QueryWrapper<DiscussPost> queryWrapper = new QueryWrapper<>();
         queryWrapper.ne("status", 2).eq(userId != 0, "user_id", userId)
-                .orderByDesc("type", "create_time");
+                .orderByDesc(orderMode == 0, "type", "create_time")
+                .orderByDesc(orderMode == 1, "type", "score", "create_time");
         return discussPostMapper.selectPage(new Page<>(current, size), queryWrapper);
     }
 
@@ -61,6 +67,21 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
         DiscussPost discussPost = discussPostMapper.selectById(id);
         discussPost.setStatus(status);
         discussPostMapper.updateById(discussPost);
+    }
+
+    public void updateScore(int id, double score) {
+        DiscussPost discussPost = discussPostMapper.selectById(id);
+        discussPost.setScore(score);
+        discussPostMapper.updateById(discussPost);
+    }
+
+    /**
+     * 计算帖子分数
+     */
+    public void calculateDiscussPostScore(int discussPostId) {
+        // 放入Set去重
+        String redisKey = RedisKeyUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, discussPostId);
     }
 
 }

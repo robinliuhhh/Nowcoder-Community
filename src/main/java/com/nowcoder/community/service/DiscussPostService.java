@@ -6,7 +6,7 @@ import com.nowcoder.community.entity.DiscussPost;
 
 public interface DiscussPostService extends IService<DiscussPost> {
 
-    IPage<DiscussPost> findDiscussPosts(int userId, int current, int size);
+    IPage<DiscussPost> findDiscussPosts(int userId, int current, int size, int orderMode);
 
     int findDiscussPostRows(int userId);
 
@@ -15,5 +15,9 @@ public interface DiscussPostService extends IService<DiscussPost> {
     void updateType(int id, int type);
 
     void updateStatus(int id, int status);
+
+    void updateScore(int id, double score);
+
+    void calculateDiscussPostScore(int discussPostId);
 
 }

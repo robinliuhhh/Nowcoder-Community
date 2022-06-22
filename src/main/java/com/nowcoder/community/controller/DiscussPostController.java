@@ -58,6 +58,7 @@ public class DiscussPostController implements CommunityConstant {
 
         // 触发发帖事件
         eventProducer.fireDiscussPostEvent(TOPIC_PUBLISH, user.getId(), post.getId());
+        discussPostService.calculateDiscussPostScore(post.getId());
 
         // 报错的情况 将来统一处理
         return CommunityUtil.getJSONString(0, "发布成功!");
@@ -166,6 +167,7 @@ public class DiscussPostController implements CommunityConstant {
         discussPostService.updateStatus(id, 1);
         // 触发发帖事件
         eventProducer.fireDiscussPostEvent(TOPIC_PUBLISH, hostHolder.getUser().getId(), id);
+        discussPostService.calculateDiscussPostScore(id);
         return CommunityUtil.getJSONString(0);
     }
 

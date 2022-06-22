@@ -63,7 +63,7 @@ public class ESElasticsearchClientTests {
         List<Integer> ids = new ArrayList<>(Arrays.asList(101, 102, 103, 111, 112, 131, 132, 133, 134));
         BulkRequest.Builder br = new BulkRequest.Builder();
         for (Integer postId : ids) {
-            posts.addAll(discussPostService.findDiscussPosts(postId, 0, 100).getRecords());
+            posts.addAll(discussPostService.findDiscussPosts(postId, 0, 100, 0).getRecords());
         }
         for (DiscussPost post : posts) {
             br.operations(op -> op
