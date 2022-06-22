@@ -52,6 +52,8 @@ public interface CommunityConstant {
      */
     int QUERY_TYPE_FOLLOWER = 2;
 
+    // region TOPIC
+
     /**
      * 主题: 评论
      */
@@ -76,6 +78,13 @@ public interface CommunityConstant {
      * 主题: 删帖
      */
     String TOPIC_DELETE = "delete";
+
+    /**
+     * 主题: 分享
+     */
+    String TOPIC_SHARE = "share";
+
+    // endregion TOPIC
 
     /**
      * 系统用户ID
