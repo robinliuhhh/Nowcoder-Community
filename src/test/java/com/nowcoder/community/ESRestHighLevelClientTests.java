@@ -55,7 +55,7 @@ public class ESRestHighLevelClientTests {
         List<DiscussPost> posts = new ArrayList<>();
         List<Integer> ids = new ArrayList<>(Arrays.asList(101, 102, 103, 111, 112, 131, 132, 133, 134));
         for (Integer postId : ids) {
-            posts.addAll(discussPostService.findDiscussPosts(postId, 0, 100, 0).getRecords());
+            posts.addAll(discussPostService.findDiscussPosts(postId, 0, 100, 0));
         }
         discussRepository.saveAll(posts);
 //        discussRepository.saveAll(discussPostService.findDiscussPosts(101, 0, 100).getRecords());
