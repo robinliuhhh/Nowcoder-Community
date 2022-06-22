@@ -24,10 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 @Controller
 @RequestMapping("/user")
@@ -35,14 +32,14 @@ public class UserController implements CommunityConstant {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    @Value("${community.path.upload}")
-    private String uploadPath;
-
-    @Value("${community.path.domain}")
-    private String domain;
-
-    @Value("${server.servlet.context-path}")
-    private String contextPath;
+//    @Value("${community.path.upload}")
+//    private String uploadPath;
+//
+//    @Value("${community.path.domain}")
+//    private String domain;
+//
+//    @Value("${server.servlet.context-path}")
+//    private String contextPath;
 
     @Value("${aliyun.endpoint}")
     private String endpoint;
@@ -154,30 +151,33 @@ public class UserController implements CommunityConstant {
 //        return "redirect:/index";
 //    }
 
-    // 不需要@LoginRequired 因为不登录也可以看别人的头像
-    // 图片是二进制流输出 通过HttpServletResponse直接输出 所以返回值是void
-    @GetMapping("/header/{fileName}")
-    public void getHeader(@PathVariable("fileName") String fileName, HttpServletResponse response) {
-        // 服务器存放路径
-        fileName = uploadPath + "/" + fileName;
-        // 文件后缀
-        String suffix = fileName.substring(fileName.lastIndexOf("."));
-        // 响应图片
-        response.setContentType("image/" + suffix);
-        try (
-                FileInputStream fis = new FileInputStream(fileName);
-                OutputStream os = response.getOutputStream();
-        ) {
-            // byte[1024] 一批一批输出 效率高
-            byte[] buffer = new byte[1024];
-            int b;
-            while ((b = fis.read(buffer)) != -1) {
-                os.write(buffer, 0, b);
-            }
-        } catch (IOException e) {
-            logger.error("读取头像失败: " + e.getMessage());
-        }
-    }
+//    // 不需要@LoginRequired 因为不登录也可以看别人的头像
+//    // 图片是二进制流输出 通过HttpServletResponse直接输出 所以返回值是void
+//    // 上传至本地时路径为 http://localhost:8080/community/user/header/xxx.png
+//    // 此时刷新界面读到user.headerUrl时会调用此方法
+//    @Deprecated
+//    @GetMapping("/header/{fileName}")
+//    public void getHeader(@PathVariable("fileName") String fileName, HttpServletResponse response) {
+//        // 服务器存放路径
+//        fileName = uploadPath + "/" + fileName;
+//        // 文件后缀
+//        String suffix = fileName.substring(fileName.lastIndexOf("."));
+//        // 响应图片
+//        response.setContentType("image/" + suffix);
+//        try (
+//                FileInputStream fis = new FileInputStream(fileName);
+//                OutputStream os = response.getOutputStream();
+//        ) {
+//            // byte[1024] 一批一批输出 效率高
+//            byte[] buffer = new byte[1024];
+//            int b;
+//            while ((b = fis.read(buffer)) != -1) {
+//                os.write(buffer, 0, b);
+//            }
+//        } catch (IOException e) {
+//            logger.error("读取头像失败: " + e.getMessage());
+//        }
+//    }
 
     // 个人主页
     @GetMapping("/profile/{userId}")
