@@ -104,7 +104,7 @@ public class DiscussPostServiceImpl extends ServiceImpl<DiscussPostMapper, Discu
 
     private int selectDiscussPostRows(int userId) {
         QueryWrapper<DiscussPost> queryWrapper = new QueryWrapper<>();
-        queryWrapper.ne("status", 2).eq("user_id", userId);
+        queryWrapper.ne("status", 2).eq(userId != 0, "user_id", userId);
         return discussPostMapper.selectCount(queryWrapper).intValue();
     }
 
