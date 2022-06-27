@@ -42,7 +42,7 @@ public class SecurityConfig implements CommunityConstant {
                 .antMatchers(
                         "/discuss/delete",
                         "/data/**",
-                        "/actuator/**")
+                        "/actuator/**") // actuator需要管理员访问权限
                 .hasAnyAuthority(AUTHORITY_ADMIN)
                 .anyRequest().permitAll() // 除了上面的请求以外 其他所有请求都开放权限
                 .and().csrf().disable(); // 禁用掉csrf验证（异步请求没有表单 需要在页面的<meta>标签和js中配置 很繁琐）
